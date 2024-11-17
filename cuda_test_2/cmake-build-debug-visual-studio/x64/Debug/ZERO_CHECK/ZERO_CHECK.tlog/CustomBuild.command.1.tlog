@@ -1,0 +1,10 @@
+^E:\JETBRAINS\CLIONPROJECTS\CUDA_TEST_2\CMAKE-BUILD-DEBUG-VISUAL-STUDIO\CMAKEFILES\EE7055AAC19A58F9A7B3400E200A8062\GENERATE.STAMP.RULE
+setlocal
+"E:\jetbrains\CLion 2023.1\bin\cmake\win\x64\bin\cmake.exe" -SE:/jetbrains/CLionProjects/cuda_test_2 -BE:/jetbrains/CLionProjects/cuda_test_2/cmake-build-debug-visual-studio --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file E:/jetbrains/CLionProjects/cuda_test_2/cmake-build-debug-visual-studio/cuda_test_2.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

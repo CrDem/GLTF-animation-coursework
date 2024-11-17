@@ -1,0 +1,10 @@
+^E:\JETBRAINS\CLIONPROJECTS\CUDA_TEST_2\CMAKELISTS.TXT
+setlocal
+"E:\jetbrains\CLion 2023.1\bin\cmake\win\x64\bin\cmake.exe" -SE:/jetbrains/CLionProjects/cuda_test_2 -BE:/jetbrains/CLionProjects/cuda_test_2/cmake-build-debug-visual-studio --check-stamp-file E:/jetbrains/CLionProjects/cuda_test_2/cmake-build-debug-visual-studio/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
