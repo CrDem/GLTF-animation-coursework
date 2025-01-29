@@ -914,13 +914,19 @@ void OptiXRender::render(Buffer* output)
         mScene->clearDirtyState();
     }
 
-    /*updating TLAS every frame
-    getSharedContext().mSubframeIndex = 0;
-    rotationAngle += 0.02f;
+    SettingsManager& settings = *getSettings();
+    bool settingsChanged = false;
+
+    //updating TLAS 
+    //getSharedContext().mSubframeIndex = 0;
+    uint32_t rotationY = settings.getAs<uint32_t>("render/nodes/rotationY");
+    //rotationAngle += 0.02f;
+    settingsChanged = (rotationAngle != rotationY * 0.01f);
+    rotationAngle = rotationY * 0.01f;
     glm::quat rotationQuat = glm::angleAxis(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
     mScene->animateNode(0, oka::Scene::AnimationChannel::PathType::ROTATION, rotationQuat);
-    updateTopLevelAccelerationStructure();*/
+    updateTopLevelAccelerationStructure();
 
     const uint32_t width = output->width();
     const uint32_t height = output->height();
@@ -942,12 +948,9 @@ void OptiXRender::render(Buffer* output)
         getSharedContext().mSubframeIndex = 0;
     }
 
-    SettingsManager& settings = *getSettings();
-    bool settingsChanged = false;
-
     static uint32_t rectLightSamplingMethodPrev = 0;
     const uint32_t rectLightSamplingMethod = settings.getAs<uint32_t>("render/pt/rectLightSamplingMethod");
-    settingsChanged = (rectLightSamplingMethodPrev != rectLightSamplingMethod);
+    settingsChanged |= (rectLightSamplingMethodPrev != rectLightSamplingMethod);
     rectLightSamplingMethodPrev = rectLightSamplingMethod;
 
     static bool enableAccumulationPrev = 0;

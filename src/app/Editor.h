@@ -68,10 +68,10 @@ public:
 
     void prepare()
     {
-        m_sceneLoader->loadGltf("D:/3D/vespa from blender/untitled.gltf", *m_scene);
+        m_sceneLoader->loadGltf("D:/3D/vespa/initial/vespa.gltf", *m_scene);
+        //m_sceneLoader->loadGltf("D:/3D/vespa from blender/untitled.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/skinning cylinder + vespa/skinningCylinder.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/RiggedSimple gltf/RiggedSimple.gltf", *m_scene);
-        //m_sceneLoader->loadGltf("D:/3D/vespa/initial/vespa.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/RiggedSimple gltf from blender/RiggedSimple.gltf", *m_scene);
         oka::Camera camera;
         camera.name = "Main";
@@ -91,8 +91,8 @@ public:
         //const std::string sceneFile = "D:/3D/RiggedSimple gltf from blender/RiggedSimple.gltf";
         //const std::string sceneFile = "D:/3D/RiggedSimple gltf/RiggedSimple.gltf";
         //const std::string sceneFile = "D:/3D/skinning cylinder + vespa/skinningCylinder.gltf";
-        const std::string sceneFile = "D:/3D/vespa from blender/untitled.gltf";
-        //const std::string sceneFile = "D:/3D/vespa/initial/vespa.gltf";
+        //const std::string sceneFile = "D:/3D/vespa from blender/untitled.gltf";
+        const std::string sceneFile = "D:/3D/vespa/initial/vespa.gltf";
         const std::filesystem::path sceneFilePath = { sceneFile.c_str() };
         const std::string resourceSearchPath = sceneFilePath.parent_path().string();
         STRELKA_DEBUG("Resource search path {}", resourceSearchPath);
@@ -104,6 +104,7 @@ public:
         m_settingsManager->setAs<uint32_t>("render/height", imageHeight);
         m_settingsManager->setAs<uint32_t>("render/pt/depth", 4);
         m_settingsManager->setAs<uint32_t>("render/pt/sppTotal", 256);
+        m_settingsManager->setAs<uint32_t>("render/nodes/rotationY", 500);
         m_settingsManager->setAs<uint32_t>("render/pt/spp", 1);
         m_settingsManager->setAs<uint32_t>("render/pt/iteration", 0);
         m_settingsManager->setAs<uint32_t>("render/pt/stratifiedSamplingType", 0); // 0 - none, 1 - random, 2 -
@@ -369,6 +370,10 @@ public:
             bool enableAccumulation = m_settingsManager->getAs<bool>("render/pt/enableAcc");
             ImGui::Checkbox("Enable Path Tracer Acc", &enableAccumulation);
             m_settingsManager->setAs<bool>("render/pt/enableAcc", enableAccumulation);
+
+            uint32_t rotationY = m_settingsManager->getAs<uint32_t>("render/nodes/rotationY");
+            ImGui::SliderInt("rotation Y", (int*)&rotationY, 500, 750);
+            m_settingsManager->setAs<uint32_t>("render/nodes/rotationY", rotationY);
 
             ImGui::TreePop();
         }
