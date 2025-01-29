@@ -58,6 +58,9 @@ struct PathTracerState
 class OptiXRender : public Render
 {
 private:
+
+    float rotationAngle = 0.00f;
+
     struct Mesh
     {
         OptixTraversableHandle gas_handle = 0;

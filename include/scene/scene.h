@@ -94,12 +94,22 @@ public:
 
     struct Node
     {
+        enum class NodeType
+        {
+            unknown,
+            sceneGraph,
+            mesh,
+            camera,
+            skeleton
+        };
+        NodeType type = NodeType::unknown;
         std::string name;
-        glm::float3 translation;
-        glm::float3 scale;
-        glm::quat rotation;
+        glm::float3 translation; //local translation
+        glm::float3 scale; //local scale
+        glm::quat rotation; //local rotation
         int parent = -1;
         std::vector<int> children;
+        std::vector<uint32_t> instanceIds;
     };
     std::vector<Node> mNodes;
 
@@ -255,6 +265,17 @@ public:
         return mLightDesc;
     }
 
+    const std::vector<Node>& getNodes() const
+    {
+        return mNodes;
+    }
+
+    glm::mat4 calculateNodeLocalTransform(const uint32_t nodeId);
+    glm::mat4 calculateNodeGlobalTransform(const uint32_t nodeId);
+    void animateNode(const uint32_t nodeId, AnimationChannel::PathType targetProperty, const glm::float3 newValue);
+    void animateNode(const uint32_t nodeId, AnimationChannel::PathType targetProperty, const glm::quat newValue);
+    void updateNode(const uint32_t nodeId);
+
     uint32_t findCameraByName(const std::string& name)
     {
         std::scoped_lock lock(mCameraMutex);
@@ -301,11 +322,6 @@ public:
     }
 
     const std::vector<Instance>& getInstances() const
-    {
-        return mInstances;
-    }
-
-    std::vector<Instance>& getInstancesToEdit()
     {
         return mInstances;
     }

@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <filesystem>
 
+#include <iostream>
+
 namespace fs = std::filesystem;
 
 namespace oka
@@ -105,7 +107,95 @@ std::string Scene::getSceneDir()
 {
     fs::path p(modelPath);
     return p.parent_path().string();
-};
+}
+
+glm::mat4 Scene::calculateNodeLocalTransform(const uint32_t nodeId)
+{
+    const glm::float4x4 translationMatrix = glm::translate(glm::float4x4(1.0f), mNodes[nodeId].translation);
+    const glm::float4x4 rotationMatrix{ mNodes[nodeId].rotation };
+    const glm::float4x4 scaleMatrix = glm::scale(glm::float4x4(1.0f), mNodes[nodeId].scale);
+    return translationMatrix * rotationMatrix * scaleMatrix;
+}
+
+glm::mat4 Scene::calculateNodeGlobalTransform(const uint32_t nodeId)
+{
+    int parentId = mNodes[nodeId].parent;
+    if (parentId == -1) {
+        return calculateNodeLocalTransform(nodeId);
+    }
+    else {
+        return calculateNodeGlobalTransform(parentId) * calculateNodeLocalTransform(nodeId);
+    }
+}
+
+void Scene::animateNode(const uint32_t nodeId, AnimationChannel::PathType targetProperty, const glm::float3 newValue)
+{
+    switch (targetProperty)
+    {
+    case AnimationChannel::PathType::TRANSLATION:
+        mNodes[nodeId].translation = newValue;
+        updateNode(nodeId);
+        break;
+
+    case AnimationChannel::PathType::SCALE:
+        mNodes[nodeId].scale = newValue;
+        updateNode(nodeId);
+        break;
+    
+    case AnimationChannel::PathType::ROTATION:
+        std::cout << "Invalid value to animate ROTATION, use 2nd definition" << std::endl;
+        break;
+
+    default:
+        break;
+    }
+}
+
+void Scene::animateNode(const uint32_t nodeId, AnimationChannel::PathType targetProperty, const glm::quat newValue) 
+{
+    switch (targetProperty)
+    {
+    case AnimationChannel::PathType::TRANSLATION:
+        std::cout << "Invalid value to animate TRANSLATION, use 1st definition" << std::endl;
+
+    case AnimationChannel::PathType::SCALE:
+        std::cout << "Invalid value to animate SCALE, use 1st definition" << std::endl;
+        break;
+    
+    case AnimationChannel::PathType::ROTATION:
+        mNodes[nodeId].rotation = newValue;
+        updateNode(nodeId);
+        break;
+
+    default:
+        break;
+    }
+}
+
+void Scene::updateNode(const uint32_t nodeId)
+{
+    const glm::float4x4 globalTransform = calculateNodeGlobalTransform(nodeId);
+
+    // if this node is sceneGraph node - recursive call for updating children
+    // if this node is mesh node - updating Instances
+    switch (mNodes[nodeId].type)
+    {
+    case Node::NodeType::mesh:
+        for (const auto instId: mNodes[nodeId].instanceIds) {
+            mInstances[instId].transform = globalTransform;
+        }
+        break;
+
+    case Node::NodeType::sceneGraph:
+        for (const auto childId: mNodes[nodeId].children) {
+            updateNode(childId);
+        }
+        break;
+    
+    default:
+        break;
+    }
+}
 
 //  valid range of coordinates [-1; 1]
 uint32_t packNormals(const glm::float3& normal)

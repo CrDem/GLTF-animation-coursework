@@ -914,16 +914,13 @@ void OptiXRender::render(Buffer* output)
         mScene->clearDirtyState();
     }
 
-    // updating TLAS every frame
+    /*updating TLAS every frame
     getSharedContext().mSubframeIndex = 0;
-    const float angleDelta = 0.01f; // rotate angle per frame
-    glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), angleDelta, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationAngle += 0.02f;
+    glm::quat rotationQuat = glm::angleAxis(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    for (auto& currInstance : mScene->getInstancesToEdit()) 
-    {
-        currInstance.transform = rotationY * currInstance.transform;
-    }
-    updateTopLevelAccelerationStructure();
+    mScene->animateNode(0, oka::Scene::AnimationChannel::PathType::ROTATION, rotationQuat);
+    updateTopLevelAccelerationStructure();*/
 
     const uint32_t width = output->width();
     const uint32_t height = output->height();

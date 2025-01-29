@@ -92,7 +92,7 @@ void computeTangent(std::vector<Scene::Vertex>& vertices,
     v2.tangent = packedTangent;
 }
 
-void processPrimitive(const tinygltf::Model& model, oka::Scene& scene, const tinygltf::Primitive& primitive, const glm::float4x4& transform, const float globalScale)
+void processPrimitive(const tinygltf::Model& model, oka::Scene& scene, const uint32_t parentNodeId, const tinygltf::Primitive& primitive, const glm::float4x4& transform, const float globalScale)
 {
     using namespace std;
     assert(primitive.attributes.find("POSITION") != primitive.attributes.end());
@@ -206,16 +206,17 @@ void processPrimitive(const tinygltf::Model& model, oka::Scene& scene, const tin
     assert(meshId != -1);
     uint32_t instId = scene.createInstance(Instance::Type::eMesh, meshId, matId, transform);
     assert(instId != -1);
+    scene.mNodes[parentNodeId].instanceIds.push_back(instId);
 }
 
-void processMesh(const tinygltf::Model& model, oka::Scene& scene, const tinygltf::Mesh& mesh, const glm::float4x4& transform, const float globalScale)
+void processMesh(const tinygltf::Model& model, oka::Scene& scene, const uint32_t parentNodeId, const tinygltf::Mesh& mesh, const glm::float4x4& transform, const float globalScale)
 {
     using namespace std;
     cout << "Mesh name: " << mesh.name << endl;
     cout << "Primitive count: " << mesh.primitives.size() << endl;
     for (const auto& primitive : mesh.primitives)
     {
-        processPrimitive(model, scene, primitive, transform, globalScale);
+        processPrimitive(model, scene, parentNodeId, primitive, transform, globalScale);
     }
 }
 
@@ -275,11 +276,13 @@ void processNode(const tinygltf::Model& model, oka::Scene& scene, const tinygltf
 
     if (node.mesh != -1) // mesh exist
     {
+        scene.mNodes[currentNodeId].type = oka::Scene::Node::NodeType::mesh;
         const tinygltf::Mesh& mesh = model.meshes[node.mesh];
-        processMesh(model, scene, mesh, globalTransform, globalScale);
+        processMesh(model, scene, currentNodeId, mesh, globalTransform, globalScale);
     }
     else if (node.camera != -1) // camera node
     {
+        scene.mNodes[currentNodeId].type = oka::Scene::Node::NodeType::camera;
         glm::vec3 scale;
         glm::quat rotation;
         glm::vec3 translation;
@@ -297,6 +300,7 @@ void processNode(const tinygltf::Model& model, oka::Scene& scene, const tinygltf
 
     for (int childIdx : node.children)
     {
+        scene.mNodes[currentNodeId].type = oka::Scene::Node::NodeType::sceneGraph;
         scene.mNodes[childIdx].parent = currentNodeId;
         processNode(model, scene, model.nodes[childIdx], childIdx, globalTransform, globalScale);
     }
@@ -658,7 +662,7 @@ bool GltfLoader::loadGltf(const std::string& modelPath, oka::Scene& scene)
     loadMaterials(model, scene);
     if (loadLightsFromJson(modelPath, scene) == false)
     {
-        STRELKA_WARNING("No light is scene, adding default distant light");
+        STRELKA_WARNING("No light in scene, adding default distant light");
         oka::Scene::UniformLightDesc lightDesc {};
         // lightDesc.xform = glm::mat4(1.0f);
         // lightDesc.useXform = true;
