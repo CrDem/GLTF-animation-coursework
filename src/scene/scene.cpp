@@ -431,7 +431,13 @@ uint32_t Scene::createLight(const UniformLightDesc& desc)
         scaleMatrix = glm::scale(glm::float4x4(1.0f), glm::float3(desc.radius, desc.radius, desc.radius));
     }
 
-    const glm::float4x4 transform = desc.useXform ? desc.xform * scaleMatrix : getTransform(desc);
+    //const glm::float4x4 transform = desc.useXform ? desc.xform * scaleMatrix : getTransform(desc);
+    const glm::float4x4 transform = glm::mat4(
+                                    1.0f, 0.0f, 0.0f, 0.0f,
+                                    0.0f, 1.0f, 0.0f, 0.0f,
+                                    0.0f, 0.0f, 1.0f, 0.0f,
+                                    0.0f, 0.0f, 0.0f, 1.0f
+                                    );
     uint32_t instId = createInstance(Instance::Type::eLight, currentLightMeshId, (uint32_t)-1, transform, lightId);
     assert(instId != -1);
 

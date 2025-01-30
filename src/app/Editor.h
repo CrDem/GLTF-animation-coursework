@@ -68,7 +68,8 @@ public:
 
     void prepare()
     {
-        m_sceneLoader->loadGltf("D:/3D/vespa/initial/vespa.gltf", *m_scene);
+        m_sceneLoader->loadGltf("D:/3D/debugScene/vespaBug.gltf", *m_scene);
+        //m_sceneLoader->loadGltf("D:/3D/vespa/initial/vespa.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/vespa from blender/untitled.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/skinning cylinder + vespa/skinningCylinder.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/RiggedSimple gltf/RiggedSimple.gltf", *m_scene);
@@ -92,7 +93,8 @@ public:
         //const std::string sceneFile = "D:/3D/RiggedSimple gltf/RiggedSimple.gltf";
         //const std::string sceneFile = "D:/3D/skinning cylinder + vespa/skinningCylinder.gltf";
         //const std::string sceneFile = "D:/3D/vespa from blender/untitled.gltf";
-        const std::string sceneFile = "D:/3D/vespa/initial/vespa.gltf";
+        //const std::string sceneFile = "D:/3D/vespa/initial/vespa.gltf";
+        const std::string sceneFile = "D:/3D/debugScene/vespaBug.gltf";
         const std::filesystem::path sceneFilePath = { sceneFile.c_str() };
         const std::string resourceSearchPath = sceneFilePath.parent_path().string();
         STRELKA_DEBUG("Resource search path {}", resourceSearchPath);

@@ -918,15 +918,15 @@ void OptiXRender::render(Buffer* output)
     bool settingsChanged = false;
 
     //updating TLAS 
-    //getSharedContext().mSubframeIndex = 0;
     uint32_t rotationY = settings.getAs<uint32_t>("render/nodes/rotationY");
-    //rotationAngle += 0.02f;
-    settingsChanged = (rotationAngle != rotationY * 0.01f);
-    rotationAngle = rotationY * 0.01f;
-    glm::quat rotationQuat = glm::angleAxis(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+    if (rotationAngle != rotationY * 0.01f) {
+        settingsChanged = true;
+        rotationAngle = rotationY * 0.01f;
+        glm::quat rotationQuat = glm::angleAxis(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    mScene->animateNode(0, oka::Scene::AnimationChannel::PathType::ROTATION, rotationQuat);
-    updateTopLevelAccelerationStructure();
+        mScene->animateNode(0, oka::Scene::AnimationChannel::PathType::ROTATION, rotationQuat);
+        updateTopLevelAccelerationStructure();
+    }
 
     const uint32_t width = output->width();
     const uint32_t height = output->height();
