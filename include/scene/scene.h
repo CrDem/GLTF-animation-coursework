@@ -148,11 +148,18 @@ public:
 
     struct Animation
     {
+        enum class State
+        {
+            ACTIVATED,
+            DEACTIVATED
+        };
+        State state = State::DEACTIVATED;
         std::string name;
         std::vector<AnimationSampler> samplers;
         std::vector<AnimationChannel> channels;
         float start = std::numeric_limits<float>::max();
         float end = std::numeric_limits<float>::min();
+        float current = -228;
     };
     std::vector<Animation> mAnimations;
 
@@ -264,6 +271,16 @@ public:
     {
         return mLightDesc;
     }
+
+    std::vector<Animation>& getAnimations()
+    {
+        return mAnimations;
+    }
+
+    glm::quat makeQuatFromFloat4 (const glm::float4 &value);
+    glm::float4 makeFloat4FromQuat(const glm::quat &q);
+    glm::float4 interpolate(const AnimationSampler &sampler, const AnimationChannel::PathType targetProperty, const float time);
+    void applyAnimation(const uint32_t animId);
 
     const std::vector<Node>& getNodes() const
     {

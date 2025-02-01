@@ -917,15 +917,42 @@ void OptiXRender::render(Buffer* output)
     SettingsManager& settings = *getSettings();
     bool settingsChanged = false;
 
-    //updating TLAS 
+    // node0 rotation 
     uint32_t rotationY = settings.getAs<uint32_t>("render/nodes/rotationY");
-    if (rotationAngle != rotationY * 0.01f) {
+    if (rotationAngle != rotationY * 0.01f) 
+    {
         settingsChanged = true;
         rotationAngle = rotationY * 0.01f;
         glm::quat rotationQuat = glm::angleAxis(rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
         mScene->animateNode(0, oka::Scene::AnimationChannel::PathType::ROTATION, rotationQuat);
-        updateTopLevelAccelerationStructure();
+    }
+
+    // Animation changes
+    std::vector<oka::Scene::Animation> &animations = mScene->getAnimations();
+    for (int i = 0; i < animations.size(); ++i) 
+    {
+        const std::string scrollNameStr = "render/animation/anim" + std::to_string(i) + "/time";
+        const char *scrollName = scrollNameStr.c_str();
+        float currAnimTime = settings.getAs<float>(scrollName);
+
+        if (animations[i].current != currAnimTime) {
+            settingsChanged = true;
+            animations[i].current = currAnimTime;
+            mScene->applyAnimation(i);
+        }
+    }
+
+    // TLAS refit/reduild
+    if (settingsChanged) {
+        if(updateCount < 10) {
+            updateTopLevelAccelerationStructure();
+            updateCount++;
+        }
+        else {
+            createTopLevelAccelerationStructure();
+            updateCount = 0;
+        }
     }
 
     const uint32_t width = output->width();

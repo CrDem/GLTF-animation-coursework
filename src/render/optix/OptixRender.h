@@ -60,6 +60,7 @@ class OptiXRender : public Render
 private:
 
     float rotationAngle = 0.00f;
+    int updateCount = 0;
 
     struct Mesh
     {

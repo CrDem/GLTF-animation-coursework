@@ -460,7 +460,14 @@ void loadAnimation(const tinygltf::Model& model, oka::Scene& scene)
     for (const tinygltf::Animation& animation : model.animations)
     {
         oka::Scene::Animation anim{};
-        cout << "Animation name: " << animation.name << endl;
+        
+        anim.name = animation.name;
+        if (anim.name.empty()) 
+        {
+            anim.name = "noname animation";
+        }
+        cout << "Animation name: " << anim.name << endl;
+
         for (const tinygltf::AnimationSampler& sampler : animation.samplers)
         {
             oka::Scene::AnimationSampler samp{};
@@ -545,7 +552,7 @@ void loadAnimation(const tinygltf::Model& model, oka::Scene& scene)
             chan.node = channel.target_node;
             if (chan.node < 0)
             {
-                std::cout << "skipping channel" << std::endl;
+                std::cout << "node id < 0, skipping channel" << std::endl;
                 continue;
             }
 

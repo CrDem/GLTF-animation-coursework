@@ -68,9 +68,9 @@ public:
 
     void prepare()
     {
-        m_sceneLoader->loadGltf("D:/3D/debugScene/vespaBug.gltf", *m_scene);
+        //m_sceneLoader->loadGltf("D:/3D/debugScene/vespaBug.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/vespa/initial/vespa.gltf", *m_scene);
-        //m_sceneLoader->loadGltf("D:/3D/vespa from blender/untitled.gltf", *m_scene);
+        m_sceneLoader->loadGltf("D:/3D/vespa from blender/untitled.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/skinning cylinder + vespa/skinningCylinder.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/RiggedSimple gltf/RiggedSimple.gltf", *m_scene);
         //m_sceneLoader->loadGltf("D:/3D/RiggedSimple gltf from blender/RiggedSimple.gltf", *m_scene);
@@ -92,9 +92,9 @@ public:
         //const std::string sceneFile = "D:/3D/RiggedSimple gltf from blender/RiggedSimple.gltf";
         //const std::string sceneFile = "D:/3D/RiggedSimple gltf/RiggedSimple.gltf";
         //const std::string sceneFile = "D:/3D/skinning cylinder + vespa/skinningCylinder.gltf";
-        //const std::string sceneFile = "D:/3D/vespa from blender/untitled.gltf";
+        const std::string sceneFile = "D:/3D/vespa from blender/untitled.gltf";
         //const std::string sceneFile = "D:/3D/vespa/initial/vespa.gltf";
-        const std::string sceneFile = "D:/3D/debugScene/vespaBug.gltf";
+        //const std::string sceneFile = "D:/3D/debugScene/vespaBug.gltf";
         const std::filesystem::path sceneFilePath = { sceneFile.c_str() };
         const std::string resourceSearchPath = sceneFilePath.parent_path().string();
         STRELKA_DEBUG("Resource search path {}", resourceSearchPath);
@@ -136,6 +136,16 @@ public:
         m_settingsManager->setAs<float>("render/pt/dev/shadowRayTmin", 0.0f); // offset to avoid self-collision in
                                                                               // light sampling
         m_settingsManager->setAs<float>("render/pt/dev/materialRayTmin", 0.0f); // offset to avoid self-collision in
+
+        // Animation settings
+        for (int i = 0; i < m_scene->getAnimations().size(); ++i) 
+        {
+            std::string checkboxName = "render/animation/anim" + std::to_string(i) + "/state";
+            std::string scrollName = "render/animation/anim" + std::to_string(i) + "/time";
+
+            m_settingsManager->setAs<bool>(checkboxName.c_str(), false);
+            m_settingsManager->setAs<float>(scrollName.c_str(), m_scene->getAnimations()[i].start);
+        }
     }
 
     void run()
@@ -160,6 +170,8 @@ public:
             const auto cameraSpeed = m_settingsManager->getAs<float>("render/cameraSpeed");
             m_cameraController->update(deltaTime, cameraSpeed);
             prevTime = currentTime;
+
+            playAnimations(deltaTime);
 
             m_scene->updateCamera(m_cameraController->getCamera(), 0);
 
@@ -188,6 +200,31 @@ public:
             m_display->setWindowTitle((std::string("Strelka") + " [" + std::to_string(frameTime) + " ms]" + " [" +
                                        std::to_string(currentSpp) + " spp]")
                                           .c_str());
+        }
+    }
+
+    void playAnimations(const double deltaTime) 
+    {
+        for (int i = 0; i < m_scene->getAnimations().size(); ++i) 
+        {
+            // checkboxName setting = play / stop
+            const std::string checkboxNameStr = "render/animation/anim" + std::to_string(i) + "/state";
+            const char *checkboxName = checkboxNameStr.c_str();
+            bool currAnimEnable = m_settingsManager->getAs<bool>(checkboxName);
+
+            if (currAnimEnable) 
+            {
+                const std::string scrollNameStr = "render/animation/anim" + std::to_string(i) + "/time";
+                const char *scrollName = scrollNameStr.c_str();
+                float currAnimTime = m_settingsManager->getAs<float>(scrollName);
+
+                const float currAnimStart = m_scene->getAnimations()[i].start;
+                const float currAnimEnd = m_scene->getAnimations()[i].end;
+
+                currAnimTime += deltaTime;
+                if (currAnimTime > currAnimEnd) currAnimTime -= (currAnimEnd - currAnimStart);
+                m_settingsManager->setAs<float>(scrollName, currAnimTime);
+            }
         }
     }
 
@@ -373,10 +410,6 @@ public:
             ImGui::Checkbox("Enable Path Tracer Acc", &enableAccumulation);
             m_settingsManager->setAs<bool>("render/pt/enableAcc", enableAccumulation);
 
-            uint32_t rotationY = m_settingsManager->getAs<uint32_t>("render/nodes/rotationY");
-            ImGui::SliderInt("rotation Y", (int*)&rotationY, 500, 750);
-            m_settingsManager->setAs<uint32_t>("render/nodes/rotationY", rotationY);
-
             ImGui::TreePop();
         }
 
@@ -421,6 +454,31 @@ public:
         m_settingsManager->setAs<float>("render/pt/dev/shadowRayTmin", shadowRayTmin);
 
         ImGui::End(); // end window
+
+        if (ImGui::Begin("Animations")) {
+
+            uint32_t rotationY = m_settingsManager->getAs<uint32_t>("render/nodes/rotationY");
+            ImGui::SliderInt("rotation Y", (int*)&rotationY, 500, 750);
+            m_settingsManager->setAs<uint32_t>("render/nodes/rotationY", rotationY);
+            
+            auto animations = m_scene->getAnimations();
+            for (int i = 0; i < animations.size(); ++i) {
+                std::string checkboxNameStr = "render/animation/anim" + std::to_string(i) + "/state";
+                const char *checkboxName = checkboxNameStr.c_str();
+                std::string scrollNameStr = "render/animation/anim" + std::to_string(i) + "/time";
+                const char *scrollName = scrollNameStr.c_str();
+
+                bool currAnimEnable = m_settingsManager->getAs<bool>(checkboxName);
+                ImGui::Checkbox(animations[i].name.c_str(), &currAnimEnable);
+                m_settingsManager->setAs<bool>(checkboxName, currAnimEnable);
+
+                float currAnimTime = m_settingsManager->getAs<float>(scrollName);
+                ImGui::SliderFloat((animations[i].name + " time").c_str(), &currAnimTime, animations[i].start, animations[i].end);
+                m_settingsManager->setAs<float>(scrollName, currAnimTime);
+            }
+
+            ImGui::End(); // end window
+        }
 
         // Rendering
         ImGui::Render();

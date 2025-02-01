@@ -109,6 +109,78 @@ std::string Scene::getSceneDir()
     return p.parent_path().string();
 }
 
+glm::quat Scene::makeQuatFromFloat4(const glm::float4 &value)
+{
+    const float floatRotation[4] = {
+                value[3],
+                value[0],
+                value[1],
+                value[2],
+            };
+    return glm::make_quat(floatRotation);
+}
+
+glm::float4 Scene::makeFloat4FromQuat(const glm::quat &q)
+{
+    return glm::float4(q.x, q.y, q.z, q.w);
+}
+
+glm::float4 Scene::interpolate(const AnimationSampler &sampler, const AnimationChannel::PathType targetProperty, const float time)
+{
+    glm::float4 result;
+    float previousTime = std::numeric_limits<float>::min();
+    float nextTime = std::numeric_limits<float>::max();
+    glm::float4 previousValue, nextValue;
+
+    for (int i = 0; i < sampler.inputs.size(); ++i)
+    {
+        if (sampler.inputs[i] == time) return sampler.outputsVec4[i]; // dont need to interpolate
+
+        if (sampler.inputs[i] < time && sampler.inputs[i] > previousTime) 
+        {
+            previousTime = sampler.inputs[i];
+            previousValue = sampler.outputsVec4[i];
+        }
+        if (sampler.inputs[i] > time && sampler.inputs[i] < nextTime)
+        {
+            nextTime = sampler.inputs[i];
+            nextValue = sampler.outputsVec4[i];
+        }
+    }
+
+    switch (sampler.interpolation)
+    {
+    case AnimationSampler::InterpolationType::STEP :
+        result = previousValue;
+        break;
+
+    case AnimationSampler::InterpolationType::CUBICSPLINE :
+        std::cout << "CUBICSPLINE interpolation not yet supported, skipping" << std::endl;
+        break;
+    
+    default: //linear
+        float interpolationValue = (time - previousTime) / (nextTime - previousTime);
+        if (targetProperty != AnimationChannel::PathType::ROTATION) result = glm::lerp(previousValue, nextValue, interpolationValue);
+        else result = makeFloat4FromQuat(glm::slerp(makeQuatFromFloat4(previousValue), makeQuatFromFloat4(nextValue), interpolationValue));
+        break;
+    }
+    return result;
+}
+
+void Scene::applyAnimation(const uint32_t animId)
+{
+    auto &animation = mAnimations[animId];
+    for (int i = 0; i < animation.channels.size(); ++i)
+    {
+        const uint32_t nodeId = animation.channels[i].node;
+        const AnimationChannel::PathType targetProperty = animation.channels[i].path;
+        const glm::float4 value = interpolate(animation.samplers[animation.channels[i].samplerIndex], targetProperty, animation.current);
+
+        if (targetProperty == AnimationChannel::PathType::ROTATION) animateNode(nodeId, targetProperty, makeQuatFromFloat4(value));
+        else animateNode(nodeId, targetProperty, glm::float3(value));
+    }
+}
+
 glm::mat4 Scene::calculateNodeLocalTransform(const uint32_t nodeId)
 {
     const glm::float4x4 translationMatrix = glm::translate(glm::float4x4(1.0f), mNodes[nodeId].translation);
